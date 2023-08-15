@@ -6,9 +6,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - MYSQL_HOST=dbvalidasiperangkat
+      - MYSQL_USER=validasiperangkat
+      - MYSQL_PASS=validasiperangkat
+      - MYSQL_DB=validasiperangkat
     image: validasiperangkat
     ports:
-      - "5000:3000"
+      - "5001:5000"
     depends_on:
       - dbvalidasi
     stdin_open: true
