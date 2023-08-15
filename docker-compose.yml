@@ -23,9 +23,9 @@ services:
       - "33067:3306"
     environment:
       MYSQL_DATABASE: "validasiperangkat"
-      MYSQL_ROOT_PASSWORD: "rootless"
-      MYSQL_USER: "root"
-      MYSQL_PASSWORD: "root"
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_USER: "validasiperangkat"
+      MYSQL_PASSWORD: "validasiperangkat"
     volumes:
       - validasiperangkat-db:/var/lib/mysql
 
