@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  webvalidasi:
+    container_name: validasiperangkat
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: validasiperangkat
+    depends_on:
+      - dbvalidasi
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/app
+
+  dbvalidasi:
+    container_name: dbvalidasiperangkat
+    build: ./docker-services/mysql
+    image: validasiperangkatdb
+    restart: always
+    ports:
+      - "33067:3306"
+    environment:
+      MYSQL_DATABASE: "validasiperangkat"
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "root"
+    volumes:
+      - validasiperangkat-db:/var/lib/mysql
+
+volumes:
+  validasiperangkat-db:

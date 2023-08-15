@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aplikasi Validasi</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9"
+      crossorigin="anonymous"
+    />
+
+    <!-- Bootstrap Icon -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section class="search-bar">
+      <div class="container">
+        <div class="card mt-3 px-3 pt-3 rounded-5 shadow">
+          <div class="row">
+            <form class="d-flex mb-3" role="search">
+              <div class="input-group">
+                <input
+                  class="form-control rounded-start-pill"
+                  type="search"
+                  placeholder="Search"
+                  aria-label="Search"
+                />
+                <button class="btn btn-1 btn-lg rounded-end-pill" type="submit">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="search-result">
+      <div class="container">
+        <div class="search-result">
+          <div class="row">
+            <div class="card p-3">
+              <div class="row">
+                <div class="col-6">
+                  <p><b>SN123</b></p>
+                  <p>Perangkat A</p>
+                  <p>Jenis A</p>
+                </div>
+                <div class="col-6 d-flex justify-content-end">
+                  <p><strong>Status:</strong> Aktif</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="search-result">
+          <p><strong>Serial Number:</strong> SN456</p>
+          <p><strong>Nama:</strong> Perangkat B</p>
+          <p><strong>Jenis Perangkat:</strong> Jenis B</p>
+          <p><strong>Status:</strong> Tidak Aktif</p>
+        </div>
+        <!-- Tambahkan div dengan class "search-result" sesuai dengan data hasil pencarian -->
+      </div>
+    </section>
+
+    <!-- Bottom Navbar (Mobile Only) -->
+    <nav class="bottom-navbar d-md-none">
+      <div class="container">
+        <div class="row">
+          <div class="col text-center">
+            <a href="/" class="navbar-link">
+              <i class="bi bi-house-door"></i>
+              <span>Home</span>
+            </a>
+          </div>
+
+          <div class="col text-center">
+            <a href="#" class="navbar-link active">
+              <i class="bi bi-search"></i>
+              <span>Validasi</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
