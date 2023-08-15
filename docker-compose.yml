@@ -14,7 +14,8 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - .:/app
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
 
   dbvalidasi:
     container_name: dbvalidasiperangkat

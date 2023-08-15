@@ -3,13 +3,15 @@ FROM node:latest
 ENV TZ="Asia/Jakarta"
 ENV PS1="\u@\h:\w\\$"
 
-WORKDIR /app
+RUN mkdir -p /usr/src/app
 
-COPY . .
+WORKDIR /usr/src/app
 
-RUN npm install && npm install -g nodemon
+COPY package.json .
 
-COPY . .
+RUN npm install
+
+COPY app.js ./
 
 EXPOSE 5000
 
