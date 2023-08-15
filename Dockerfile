@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm run install
+RUN npm install
 
 COPY . .
 
