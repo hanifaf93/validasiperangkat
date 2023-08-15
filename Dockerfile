@@ -7,7 +7,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install
+RUN run install
+
+COPY . .
 
 EXPOSE 5000
 
