@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install
+RUN npm install && npm install -g nodemon
 
 COPY . .
 
