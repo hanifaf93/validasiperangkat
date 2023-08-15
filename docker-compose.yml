@@ -7,6 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
     image: validasiperangkat
+    ports:
+      - "5000:3000"
     depends_on:
       - dbvalidasi
     stdin_open: true
