@@ -31,16 +31,30 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark align-items-start">
+      <div class="container">
+        <a class="navbar-brand" href="/">Aplikasi Validasi</a>
+        <a class="btn btn-light" href="/logout">
+          <i class="bi bi-box-arrow-right"></i>
+          <span class="d-none d-sm-inline">Logout</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- search bar -->
     <section class="search-bar">
       <div class="container">
         <div class="card mt-3 px-3 pt-3 rounded-5 shadow">
           <div class="row">
-            <form class="d-flex mb-3" role="search">
+            <form class="d-flex mb-3" role="search" action="/list" method="GET">
               <div class="input-group">
                 <input
                   class="form-control rounded-start-pill"
+                  id="searchInput"
                   type="search"
-                  placeholder="Search"
+                  name="sn"
+                  placeholder="Search serial number"
                   aria-label="Search"
                 />
                 <button class="btn btn-1 btn-lg rounded-end-pill" type="submit">
@@ -53,31 +67,70 @@
       </div>
     </section>
 
-    <section class="search-result">
+    <!-- search result -->
+    <section class="search-results">
       <div class="container">
-        <div class="search-result">
-          <div class="row">
-            <div class="card p-3">
+        <div class="card mt-3 p-3 rounded-5 shadow">
+          <% if (devices.length > 0) { %> <% devices.forEach(device => { %>
+          <a href="/detail/<%= device.sn %>" class="search-result-link">
+            <div class="search-result">
               <div class="row">
                 <div class="col-6">
-                  <p><b>SN123</b></p>
-                  <p>Perangkat A</p>
-                  <p>Jenis A</p>
+                  <p><b><%= device.sn %></b></p>
+                  <p><%= device.nama %></p>
+                  <p><%= device.perangkat %></p>
                 </div>
                 <div class="col-6 d-flex justify-content-end">
-                  <p><strong>Status:</strong> Aktif</p>
+                  <p>
+                    <strong>Status:</strong> <%= device.status === 1 ? 'Valid' :
+                    'Tidak Valid' %>
+                  </p>
                 </div>
               </div>
             </div>
+          </a>
+          <% }); %> <% } else { %>
+          <p class="text-center">Perangkat tidak ditemukan</p>
+          <% } %>
+          <!-- <div class="search-result">
+            <div class="row">
+              <div class="col-6">
+                <p><b>SN123</b></p>
+                <p>Perangkat A</p>
+                <p>Jenis A</p>
+              </div>
+              <div class="col-6 d-flex justify-content-end">
+                <p><strong>Status:</strong> Aktif</p>
+              </div>
+            </div>
           </div>
+
+          <div class="search-result">
+            <div class="row">
+              <div class="col-6">
+                <p><b>SN123</b></p>
+                <p>Perangkat A</p>
+                <p>Jenis A</p>
+              </div>
+              <div class="col-6 d-flex justify-content-end">
+                <p><strong>Status:</strong> Aktif</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="search-result">
+            <div class="row">
+              <div class="col-6">
+                <p><b>SN123</b></p>
+                <p>Perangkat A</p>
+                <p>Jenis A</p>
+              </div>
+              <div class="col-6 d-flex justify-content-end">
+                <p><strong>Status:</strong> Aktif</p>
+              </div>
+            </div>
+          </div> -->
         </div>
-        <div class="search-result">
-          <p><strong>Serial Number:</strong> SN456</p>
-          <p><strong>Nama:</strong> Perangkat B</p>
-          <p><strong>Jenis Perangkat:</strong> Jenis B</p>
-          <p><strong>Status:</strong> Tidak Aktif</p>
-        </div>
-        <!-- Tambahkan div dengan class "search-result" sesuai dengan data hasil pencarian -->
       </div>
     </section>
 
@@ -93,7 +146,7 @@
           </div>
 
           <div class="col text-center">
-            <a href="#" class="navbar-link active">
+            <a href="/list?focusSearch=true" class="navbar-link active">
               <i class="bi bi-search"></i>
               <span>Validasi</span>
             </a>
@@ -107,5 +160,14 @@
       integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
       crossorigin="anonymous"
     ></script>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const focusSearch = urlParams.get("focusSearch");
+      if (focusSearch === "true") {
+        // Give focus to the search input element
+        const searchInput = document.getElementById("searchInput");
+        searchInput.focus();
+      }
+    </script>
   </body>
 </html>

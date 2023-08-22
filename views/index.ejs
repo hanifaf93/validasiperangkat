@@ -34,7 +34,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark align-items-start">
       <div class="container">
-        <a class="navbar-brand" href="#">Aplikasi Validasi</a>
+        <a class="navbar-brand" href="/">Aplikasi Validasi</a>
         <a class="btn btn-light" href="/logout">
           <i class="bi bi-box-arrow-right"></i>
           <span class="d-none d-sm-inline">Logout</span>
@@ -49,12 +49,13 @@
             <p>Hai, <span class="fw-bold"><%= username %>!</span></p>
           </div>
           <div class="row">
-            <form class="d-flex mb-3" role="search">
+            <form class="d-flex mb-3" role="search" action="/list" method="GET">
               <div class="input-group">
                 <input
                   class="form-control rounded-start-pill"
                   type="search"
-                  placeholder="Search"
+                  name="sn"
+                  placeholder="Search serial number"
                   aria-label="Search"
                 />
                 <button class="btn btn-1 btn-lg rounded-end-pill" type="submit">
@@ -70,11 +71,11 @@
     <!-- List Perangkat -->
     <section class="device-list">
       <div class="container">
-        <div class="card mt-3 p-3 rounded-5 shadow">
+        <div class="bg-light mt-3 p-3 rounded-5">
           <div class="row">
             <!-- Perangkat Aktif -->
             <div class="col-lg-4 mb-3">
-              <div class="device-item">
+              <a href="/list" class="device-item">
                 <div class="img">
                   <img
                     src="/img/img_perangkat_aktif.svg"
@@ -83,24 +84,16 @@
                     style="width: 80px"
                   />
                 </div>
-                <div class="row">
-                  <div class="ms-3">
-                    <p class="">
-                      Perangkat Aktif: <b><%= allDeviceCount %></b>
-                    </p>
-                  </div>
-                  <div class="col">
-                    <!-- <p class=" fw-bold fs-1">
-                      <%= allDeviceCount %>
-                    </p> -->
-                  </div>
+                <div class="detail-home ms-3">
+                  <p class="fw-semibold">Perangkat Aktif</p>
+                  <p class="jumlah-device"><%= allDeviceCount %></p>
                 </div>
-              </div>
+              </a>
             </div>
 
             <!-- Perangkat Valid -->
             <div class="col-lg-4 mb-3">
-              <div class="device-item">
+              <a href="/list?status=1" class="device-item">
                 <div class="image-container">
                   <img
                     src="/img/img_perangkat_valid.svg"
@@ -112,16 +105,16 @@
                     <i class="bi bi-check2-circle icon-green"></i>
                   </div>
                 </div>
-                <div class="detail ms-3">
+                <div class="detail-home ms-3">
                   <p class="fw-semibold">Perangkat Valid</p>
-                  <p class="jumlah-device fs-1"><%= validDeviceCount %></p>
+                  <p class="jumlah-device"><%= validDeviceCount %></p>
                 </div>
-              </div>
+              </a>
             </div>
 
             <!-- Perangkat Tidak Valid -->
-            <div class="col-lg-6 mb-3">
-              <div class="device-item">
+            <div class="col-lg-4 mb-3">
+              <a href="/list?status=0" class="device-item">
                 <div class="image-container">
                   <img
                     src="/img/img_perangkat_tidak_valid.svg"
@@ -133,17 +126,11 @@
                     <i class="bi bi-x icon-red"></i>
                   </div>
                 </div>
-                <div class="ms-3">
-                  <div class="row me-3">
-                    <div class="col">
-                      <p class="fw-semibold">Perangkat Tidak Valid</p>
-                    </div>
-                    <div class="col d-flex justify-content-end">
-                      <p class="fs-1"><%= notValidDeviceCount %></p>
-                    </div>
-                  </div>
+                <div class="detail-home ms-3">
+                  <p class="fw-semibold">Perangkat Tidak Valid</p>
+                  <p class="jumlah-device"><%= notValidDeviceCount %></p>
                 </div>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -162,7 +149,7 @@
           </div>
 
           <div class="col text-center">
-            <a href="/list" class="navbar-link">
+            <a href="/list?focusSearch=true" class="navbar-link">
               <i class="bi bi-search"></i>
               <span>Validasi</span>
             </a>
