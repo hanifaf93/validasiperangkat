@@ -52,16 +52,20 @@
                 <div class="row">
                   <div class="col col-lg-12">
                     <img
-                      src="/img_perangkat_aktif.svg"
-                      class="img-fluid mx-auto rounded"
-                      alt="Perangkat Aktif"
+                      src="<%= device.image %>"
+                      class="card-img img-sm-fluid"
+                      alt="Perangkat"
                     />
                   </div>
                   <div class="col ms-3">
                     <h4>SN:</h4>
                     <p><%= device.sn %></p>
                     <h4>Status:</h4>
-                    <p><%= device.status === 1 ? 'Valid' : 'Tidak Valid' %></p>
+                    <p>
+                      <%= device.status === 1 ? `Last Validasi :
+                      ${device.time.getDate()}/${device.time.getMonth() +
+                      1}/${device.time.getFullYear()}` : 'Tidak Valid' %>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -111,29 +115,38 @@
                 </div>
 
                 <div class="valid-btn-container mt-3">
-                  <div class="row">
-                    <div class="col">
-                      <a
-                        href="/detail/<%= device.sn %>/camera"
-                        type="button"
-                        class="btn btn-1 rounded-pill btn-valid"
-                        style="width: 100%"
-                      >
-                        Valid
-                      </a>
-                    </div>
-                    <div class="col">
-                      <a
-                        href="/detail/<%= device.sn %>/update"
-                        type="button"
-                        class="btn btn-secondary rounded-pill btn-valid"
-                        style="width: 100%"
-                      >
-                        Tidak Valid
-                      </a>
-                    </div>
-                  </div>
+                  <a
+                    href="/detail/<%= device.sn %>/update"
+                    type="button"
+                    class="btn btn-1 rounded-pill btn-valid"
+                    style="width: 100%"
+                  >
+                    Update
+                  </a>
                 </div>
+
+                <% if (device.notes) { %>
+
+                <div class="notes-container mt-3">
+                  <h4>Notes:</h4>
+                  <p><%= device.notes %></p>
+                </div>
+
+                <% } else { %> <% } %> <% if (histories) { %>
+
+                <div class="row mt-5">
+                  <% if (histories.length > 0) { %>
+                  <div class="row text-center">
+                    <h4>Validasi History</h4>
+                  </div>
+                  <% } %>
+                  <ol>
+                    <% histories.forEach(history => { %>
+                    <li><%= history.time %></li>
+                    <% }) %>
+                  </ol>
+                </div>
+                <% } %>
               </div>
             </div>
           </div>

@@ -5,255 +5,460 @@ const dotenv = require("dotenv");
 const bcrypt = require("bcrypt");
 const bodyParser = require("body-parser");
 const session = require("express-session");
+const axios = require("axios");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+const Jimp = require("jimp");
+
+// Middleware
 const requireLogin = require("./authMiddleware");
+const isAdmin = require("./adminMiddleware");
 
 dotenv.config({
   path: "./.env",
 });
 
-const app = express();
+(async () => {
+  const app = express();
 
-let db;
-
-mysql
-  .createConnection({
+  const db = await mysql.createConnection({
     host: process.env.DATABASE_HOST,
     user: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE,
-  })
-  .then((connection) => {
-    console.log("MySQL Connected");
-    db = connection;
+  });
+  console.log("MySQL Connected");
+
+  const publicDirectory = path.join(__dirname, "./public");
+  app.use(express.static(publicDirectory));
+
+  app.use(express.urlencoded({ extended: false }));
+
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
+  app.use(
+    session({
+      secret: process.env.SECRET_KEY,
+      resave: false,
+      saveUninitialized: true,
+    })
+  );
+
+  app.set("view engine", "ejs");
+
+  // Routes
+  app.get("/login", (req, res) => {
+    if (req.session.userId) {
+      res.redirect("/");
+    } else {
+      res.render("login.ejs");
+    }
   });
 
-const publicDirectory = path.join(__dirname, "./public");
-app.use(express.static(publicDirectory));
+  app.post("/login", async (req, res) => {
+    console.log(req.body);
+    try {
+      const userEnteredPassword = req.body.password;
+      const query = "SELECT password, id FROM users WHERE username = ?";
+      const [results] = await db.query(query, [req.body.username]);
+      if (results[0] != null) {
+        const hashedPasswordFromDatabase = results[0].password;
 
-app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(
-  session({
-    secret: process.env.SECRET_KEY,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
-app.set("view engine", "ejs");
-
-// Routes
-app.get("/", requireLogin, async (req, res) => {
-  try {
-    const query = "SELECT username FROM users WHERE id = ?";
-    const [results] = await db.query(query, [req.session.userId]);
-
-    if (results[0] == null) return res.redirect("/login");
-
-    const username = results[0].username;
-
-    const allDeviceCountQuery = `SELECT COUNT(*) as count FROM devices`;
-    const validDeviceCountQuery = `SELECT COUNT(*) as count FROM devices WHERE status = 1`;
-    const notValidDeviceCountQuery = `SELECT COUNT(*) as count FROM devices WHERE status = 0`;
-
-    let [allDeviceCount] = await db.query(allDeviceCountQuery);
-    let [validDeviceCount] = await db.query(validDeviceCountQuery);
-    let [notValidDeviceCount] = await db.query(notValidDeviceCountQuery);
-
-    allDeviceCount = allDeviceCount[0].count;
-    validDeviceCount = validDeviceCount[0].count;
-    notValidDeviceCount = notValidDeviceCount[0].count;
-
-    res.render("index.ejs", {
-      username,
-      allDeviceCount,
-      validDeviceCount,
-      notValidDeviceCount,
-    });
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.get("/login", (req, res) => {
-  if (req.session.userId) {
-    res.redirect("/");
-  } else {
-    res.render("login.ejs");
-  }
-});
-
-app.post("/login", async (req, res) => {
-  console.log(req.body);
-  try {
-    const userEnteredPassword = req.body.password;
-    const query = "SELECT password, id FROM users WHERE username = ?";
-    const [results] = await db.query(query, [req.body.username]);
-    if (results[0] != null) {
-      const hashedPasswordFromDatabase = results[0].password;
-
-      bcrypt.compare(
-        userEnteredPassword,
-        hashedPasswordFromDatabase,
-        (err, result) => {
-          if (err) {
-            console.error("Error comparing passwords:", err);
-          } else {
-            if (result) {
-              console.log("Password matches");
-              req.session.userId = results[0].id;
-              return res.redirect("/");
+        bcrypt.compare(
+          userEnteredPassword,
+          hashedPasswordFromDatabase,
+          (err, result) => {
+            if (err) {
+              console.error("Error comparing passwords:", err);
             } else {
-              console.log("Password does not match");
-              // Deny access
-              return res.render("login", { alert: "Password salah" });
+              if (result) {
+                console.log("Password matches");
+                req.session.userId = results[0].id;
+                return res.redirect("/");
+              } else {
+                console.log("Password does not match");
+                // Deny access
+                return res.render("login", { alert: "Password salah" });
+              }
             }
           }
-        }
-      );
-    } else {
-      return res.render("login", { alert: "User tidak terdaftar" });
-    }
-  } catch (e) {
-    console.log(e);
-  }
-  //   const userEnteredPassword = req.body.password;
-  //   const query = "SELECT password, id FROM users WHERE username = ?";
-  //   db.query(query, [req.body.username], (error, results) => {
-  //     if (error) {
-  //       console.error("Error retrieving user:", error);
-  //     } else {
-  //       if (results[0] != null) {
-  //         const hashedPasswordFromDatabase = results[0].password;
-
-  //         bcrypt.compare(
-  //           userEnteredPassword,
-  //           hashedPasswordFromDatabase,
-  //           (err, result) => {
-  //             if (err) {
-  //               console.error("Error comparing passwords:", err);
-  //             } else {
-  //               if (result) {
-  //                 console.log("Password matches");
-  //                 req.session.userId = results[0].id;
-  //                 res.redirect("/");
-  //               } else {
-  //                 console.log("Password does not match");
-  //                 // Deny access
-  //                 res.render("login", { alert: "Password salah" });
-  //               }
-  //             }
-  //           }
-  //         );
-  //       } else {
-  //         res.render("login", { alert: "Akun tidak terdaftar" });
-  //       }
-  //     }
-  //   });
-});
-
-app.get("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("Error destroying session:", err);
-    } else {
-      res.redirect("/login");
+        );
+      } else {
+        return res.render("login", { alert: "User tidak terdaftar" });
+      }
+    } catch (e) {
+      console.log(e);
     }
   });
-});
 
-app.get("/list", requireLogin, async (req, res) => {
-  try {
-    const status = req.query.status || "";
-    const serialNumber = req.query.sn || "";
+  app.get("/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+      } else {
+        res.redirect("/login");
+      }
+    });
+  });
 
-    let query = `SELECT * FROM devices`;
-    const queryParams = [];
+  app.use(requireLogin(db));
 
-    if (status !== "") {
-      query += ` WHERE status = ?`;
-      queryParams.push(status);
+  app.get("/", async (req, res) => {
+    try {
+      const query = "SELECT * FROM users WHERE id = ?";
+      const [results] = await db.query(query, [req.session.userId]);
+
+      if (results[0] == null) return res.redirect("/login");
+
+      const user = results[0];
+
+      const allDeviceCountQuery = `SELECT COUNT(*) as count FROM devices`;
+      const validDeviceCountQuery = `SELECT COUNT(*) as count FROM devices WHERE status = 1`;
+      const notValidDeviceCountQuery = `SELECT COUNT(*) as count FROM devices WHERE status = 0`;
+
+      let [allDeviceCount] = await db.query(allDeviceCountQuery);
+      let [validDeviceCount] = await db.query(validDeviceCountQuery);
+      let [notValidDeviceCount] = await db.query(notValidDeviceCountQuery);
+
+      allDeviceCount = allDeviceCount[0].count;
+      validDeviceCount = validDeviceCount[0].count;
+      notValidDeviceCount = notValidDeviceCount[0].count;
+
+      res.render("index.ejs", {
+        user,
+        allDeviceCount,
+        validDeviceCount,
+        notValidDeviceCount,
+      });
+    } catch (e) {
+      console.log(e);
     }
+  });
 
-    if (serialNumber !== "") {
-      query += " WHERE sn LIKE ?";
-      queryParams.push(`%${serialNumber}%`);
+  app.get("/list", async (req, res) => {
+    try {
+      const status = req.query.status || "";
+      const serialNumber = req.query.sn || "";
+
+      let query = `SELECT * FROM devices`;
+      const queryParams = [];
+
+      if (status !== "") {
+        query += ` WHERE status = ?`;
+        queryParams.push(status);
+      }
+
+      if (serialNumber !== "") {
+        query += " WHERE sn LIKE ?";
+        queryParams.push(`%${serialNumber}%`);
+      }
+
+      const [results] = await db.query(query, queryParams);
+
+      res.render("list", { devices: results });
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("Internal Server Error");
     }
+  });
 
-    const [results] = await db.query(query, queryParams);
+  app.get("/detail/:sn", async (req, res) => {
+    const deviceSn = req.params.sn;
+    try {
+      const query = `SELECT * FROM devices WHERE sn = ?`;
+      const [results] = await db.query(query, [deviceSn]);
 
-    res.render("list", { devices: results });
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("Internal Server Error");
-  }
-});
+      const historyQuery = "SELECT * FROM history WHERE device_sn = ?";
+      const [histories] = await db.query(historyQuery, [deviceSn]);
 
-app.get("/detail/:sn", requireLogin, async (req, res) => {
-  const deviceSn = req.params.sn;
-  try {
-    const query = `SELECT * FROM devices WHERE sn = ?`;
-    const [results] = await db.query(query, [deviceSn]);
+      const device = results[0];
 
-    const device = results[0];
-    res.render("detail.ejs", { device });
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("Internal Server Error");
-  }
-});
+      device.image =
+        device.image != "" ? device.image : "/img/img_perangkat_aktif.svg";
+      res.render("detail.ejs", { device, histories });
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
-app.get("/detail/:sn/camera", requireLogin, async (req, res) => {
-  const deviceSn = req.params.sn;
-  try {
-    const query = `SELECT * FROM devices WHERE sn = ?`;
-    const [results] = await db.query(query, [deviceSn]);
+  app.get("/detail/:sn/camera", async (req, res) => {
+    const deviceSn = req.params.sn;
+    try {
+      const query = `SELECT * FROM devices WHERE sn = ?`;
+      const [results] = await db.query(query, [deviceSn]);
 
-    const device = results[0];
-    res.render("camera.ejs", { device });
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("Internal Server Error");
-  }
-});
+      const device = results[0];
 
-app.get("/detail/:sn/update", requireLogin, async (req, res) => {
-  const deviceSn = req.params.sn;
-  try {
-    const query = `SELECT * FROM devices WHERE sn = ?`;
-    const [results] = await db.query(query, [deviceSn]);
+      res.render("camera.ejs", { device });
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
-    const device = results[0];
-    res.render("update.ejs", { device });
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("Internal Server Error");
-  }
-});
+  app.get("/detail/:sn/update", async (req, res) => {
+    const deviceSn = req.params.sn;
+    try {
+      const query = `SELECT * FROM devices WHERE sn = ?`;
+      const [results] = await db.query(query, [deviceSn]);
 
-app.post("/update-status/:sn", requireLogin, async (req, res) => {
-  const deviceSn = req.params.sn;
-  const newStatus = req.body.status;
+      const device = results[0];
+      device.image =
+        device.image != "" ? device.image : "/img/img_perangkat_aktif.svg";
+      res.render("update.ejs", { device });
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
-  console.log(req.body);
+  app.post("/update-status/:sn", async (req, res) => {
+    const sn = req.params.sn;
+    const notes = req.body.notes;
 
-  console.log(deviceSn);
-  console.log(newStatus);
+    try {
+      const query = `UPDATE devices SET status = 0, notes = ? WHERE sn = ?`;
+      await db.query(query, [notes, sn]);
 
-  try {
-    const query = `UPDATE devices SET status = ? WHERE sn = ?`;
-    await db.query(query, [newStatus, deviceSn]);
+      res.status(200).redirect("/detail/" + sn);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("Internal Server Error");
+    }
+  });
 
-    res.status(200).send("Device status updated");
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("Internal Server Error");
-  }
-});
+  app.get("/location", async (req, res) => {
+    const location_api_key = process.env.location_api_key;
+    try {
+      const response = await axios.get(
+        `https://us1.locationiq.com/v1/reverse?key=${location_api_key}&lat=${req.query.lat}&lon=${req.query.lon}&format=json`
+      );
 
-// End Routes
+      const locationData = response.data;
+      res.json(locationData);
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      res.status(500).json({ error: "Error fetching location" });
+    }
+  });
 
-app.listen(5000, () => {
-  console.log("Server started on Port 5000");
-});
+  app.post("/upload/:sn", upload.single("deviceImage"), async (req, res) => {
+    const image = req.file;
+    const sn = req.params.sn;
+    const notes = req.body.notes;
+    const deviceLocation = req.body.location;
+
+    var currentDateTime = new Date();
+
+    const monthNames = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    var day = currentDateTime.getDate();
+    var month = currentDateTime.getMonth() + 1;
+    var monthIndex = currentDateTime.getMonth();
+    var year = currentDateTime.getFullYear();
+    var currentTime = currentDateTime.toLocaleTimeString();
+
+    var formattedDatetime =
+      day + " " + monthNames[monthIndex] + " " + year + ", " + currentTime;
+
+    console.log(formattedDatetime);
+    console.log(deviceLocation);
+
+    if (image.mimetype != "image/jpeg" && image.mimetype != "image/png")
+      return res.status(400).json({ error: "File harus jpeg/png" });
+
+    console.log(image.buffer.toJSON());
+    console.log(sn);
+
+    // Buat gambar latar belakang untuk teks watermark
+    const imageBefore = await Jimp.read(image.buffer);
+    const imageResized = imageBefore.cover(500, 500);
+
+    const imageWidth = imageResized.getWidth();
+    const imageHeight = imageResized.getHeight();
+
+    console.log(imageWidth);
+    console.log(imageHeight);
+
+    const textWidth = 500; // Lebar latar belakang teks
+    const textHeight = 100; // Tinggi latar belakang teks
+    const backgroundColor = 0x000000ff; // Warna latar belakang (hitam)
+
+    const backgroundWatermark = new Jimp(
+      textWidth,
+      textHeight,
+      backgroundColor
+    );
+
+    // Tambahkan teks pada latar belakang
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+    backgroundWatermark.print(
+      font,
+      10,
+      10,
+      {
+        text:
+          "Serial Number : " +
+          sn +
+          ", Tanggal : " +
+          formattedDatetime +
+          ", Lokasi : " +
+          deviceLocation,
+        alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT,
+        alignmentY: Jimp.VERTICAL_ALIGN_TOP,
+      },
+      450,
+      200
+    );
+
+    // Gabungkan latar belakang teks dengan gambar asli
+    const x = 0; // Posisi x untuk teks pada gambar asli
+    const y = imageHeight - textHeight; // Posisi y untuk teks pada gambar asli
+
+    imageResized.composite(backgroundWatermark, x, y, {
+      mode: Jimp.BLEND_SOURCE_OVER, // Atur mode blending untuk transparansi
+      opacitySource: 0.5, // Ubah kecerahan teks agar tidak terlalu terang
+    });
+
+    const base64Image = await imageResized.getBase64Async(Jimp.MIME_JPEG);
+
+    try {
+      const query =
+        "UPDATE devices SET image = ?, time = NOW(), location = ?, status = 1, notes = ? WHERE sn = ?";
+      await db.query(query, [base64Image, deviceLocation, notes, sn]);
+
+      const historyQuery =
+        "INSERT INTO history (device_sn, time, location) VALUES (?, NOW(), ?)";
+      await db.query(historyQuery, [sn, deviceLocation]);
+
+      res.status(200).redirect("/detail/" + sn);
+    } catch (e) {
+      console.error("Error uploading image:", e);
+      res.status(500).json({ error: "Error uploading image" });
+    }
+  });
+
+  app.get("/dashboard", isAdmin, async (req, res) => {
+    try {
+      const query = `SELECT * FROM devices`;
+
+      const [results] = await db.query(query);
+      res.render("dashboard", { devices: results });
+    } catch (e) {
+      res.status(500).send("Internal Server Error");
+    }
+  });
+
+  app.get("/dashboard/add", isAdmin, async (req, res) => {
+    const successMessage = req.query.success;
+    res.render("add", { successMessage });
+  });
+
+  app.post("/add-device", isAdmin, async (req, res) => {
+    const sn = req.body.serialNumber;
+    const csm = req.body.csm;
+    const perangkat = req.body.perangkat;
+    const jenis = req.body.jenis;
+    const nama = req.body.nama;
+    const regional = req.body.regional;
+    const deviceUse = req.body.deviceUse;
+    const nik = req.body.nik;
+    const telp = "62" + req.body.telepon;
+
+    try {
+      const query = `INSERT INTO devices (sn, csm, perangkat, jenis, nama, regional, device_use, nik, telp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+      await db.query(query, [
+        sn,
+        csm,
+        perangkat,
+        jenis,
+        nama,
+        regional,
+        deviceUse,
+        nik,
+        telp,
+      ]);
+
+      res.status(200).redirect("/dashboard/add?success=1");
+    } catch (e) {
+      res.status(500).send("Internal Server Error");
+    }
+  });
+
+  app.get("/dashboard/settings", isAdmin, async (req, res) => {
+    const successMessage = req.query.success;
+    try {
+      const query = `SELECT * FROM admin_settings`;
+
+      const [results] = await db.query(query);
+
+      res.render("settings", {
+        successMessage: successMessage,
+        settings: results,
+      });
+    } catch (e) {
+      res.status(500).send("Internal Server Error");
+    }
+  });
+
+  app.post("/update-admin-settings", isAdmin, async (req, res) => {
+    const deviceExpirationDays = req.body.deviceExpirationDays;
+
+    try {
+      const query = `UPDATE admin_settings SET device_expiration_days = ? WHERE id = 1`;
+      await db.query(query, [deviceExpirationDays]);
+
+      res.status(200).redirect("/dashboard/settings?success=1");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("Internal Server Error");
+    }
+  });
+
+  app.get("/register", isAdmin, async (req, res) => {
+    const successMessage = req.query.success;
+
+    res.render("register", { successMessage });
+  });
+
+  app.post("/add-user", isAdmin, async (req, res) => {
+    try {
+      const { username, password, regional, admin = 0 } = req.body;
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const insertQuery = `INSERT INTO users (username, password, regional, admin) VALUES (?, ?, ?, ?)`;
+      await db.query(insertQuery, [username, hashedPassword, regional, admin]);
+
+      console.log("User registered successfully");
+      res.redirect("/register?success=1");
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Error adding user");
+    }
+  });
+
+  // End Routes
+
+  app.listen(5000, () => {
+    console.log("Server started on Port 5000");
+  });
+})();

@@ -45,8 +45,14 @@
     <section class="search-bar">
       <div class="container">
         <div class="card mt-3 px-3 pt-3 rounded-5 shadow">
-          <div class="row">
-            <p>Hai, <span class="fw-bold"><%= username %>!</span></p>
+          <div class="d-flex justify-content-between align-items-center">
+            <p>Hai, <span class="fw-bold"><%= user.username %>!</span></p>
+            <% if (user.admin == 1) { %>
+
+            <a href="/dashboard" class="btn btn-1 rounded-pill"
+              >Admin Dashboard</a
+            >
+            <% } %>
           </div>
           <div class="row">
             <form class="d-flex mb-3" role="search" action="/list" method="GET">

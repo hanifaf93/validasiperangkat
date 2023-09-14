@@ -52,9 +52,9 @@
                 <div class="row">
                   <div class="col col-lg-12">
                     <img
-                      src="/img_perangkat_aktif.svg"
-                      class="img-fluid mx-auto rounded"
-                      alt="Perangkat Aktif"
+                      src="<%= device.image %>"
+                      class="card-img img-sm-fluid"
+                      alt="Perangkat"
                     />
                   </div>
                   <div class="col ms-3">
@@ -110,84 +110,61 @@
                   </div>
                 </div>
 
-                <div class="form-box">
-                  <div class="button-box">
-                    <div id="btn-switcher"></div>
-                    <div class="toggle-btn-container">
-                      <button
-                        class="toggle-btn w-100"
-                        onclick="clickToUnvalidate()"
-                      >
-                        Tidak Valid
-                      </button>
-                      <button
-                        class="toggle-btn w-100"
-                        onclick="clickToValidate()"
-                      >
-                        Valid
-                      </button>
-                    </div>
+                <div class="row">
+                  <div class="col">
+                    <a
+                      href="/detail/<%= device.sn %>/camera"
+                      type="button"
+                      class="btn btn-1 rounded-pill btn-valid"
+                      style="width: 100%"
+                    >
+                      Valid
+                    </a>
+                  </div>
+                  <div class="col">
+                    <a
+                      id="tidakValidBtn"
+                      type="button"
+                      class="btn btn-secondary rounded-pill btn-valid"
+                      style="width: 100%"
+                      onclick="showNotesForm()"
+                    >
+                      Tidak Valid
+                    </a>
                   </div>
                 </div>
-
-                <div class="camera-btn-container mt-3">
-                  <a
-                    type="button"
-                    class="btn btn-1 rounded-pill btn-valid"
-                    style="width: 100%"
+                <div class="row">
+                  <form
+                    id="notesForm"
+                    method="POST"
+                    action="/update-status/<%= device.sn %>"
+                    style="display: none"
                   >
-                    <i class="bi bi-camera me-1"></i>
-                    Ambil Foto
-                  </a>
-                </div>
-
-                <!-- <input class="form-check-input" type="checkbox" id="switcher" />
-                <label class="form-check-label" for="switcher">Switcher</label>
-
-                <section class="button">
-                  <div class="container mt-3">
-                    <div class="row">
-                      <div class="col d-flex justify-content-end">
-                        <button
-                          type="button"
-                          class="btn btn-1 rounded-pill btn-valid"
-                          style="width: 100%"
-                          onclick="clickToValidate()"
-                        >
-                          Valid
-                        </button>
-                      </div>
-                      <div class="col d-flex justify-content-start">
-                        <button
-                          type="button"
-                          class="btn btn-secondary rounded-pill btn-tidak-valid"
-                          style="width: 100%"
-                        >
-                          Tidak Valid
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </section> -->
-
-                <!-- input text -->
-                <div id="notesInput" class="form-container">
-                  <div class="input-group input-group-sm mt-3">
                     <textarea
-                      class="form-control rounded-3"
+                      class="form-control rounded-3 mt-3"
                       rows="4"
+                      placeholder="Masukkan catatan di sini"
+                      name="notes"
                     ></textarea>
-                  </div>
-                  <div class="container d-flex justify-content-end">
-                    <div class="row">
+                    <div class="d-flex justify-content-end">
                       <button
+                        id="cancelBtn"
+                        type="button"
+                        class="btn btn-danger me-1 rounded-pill mt-3"
+                        onclick="hideNotesForm()"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        id="saveBtn"
+                        type="button"
                         class="btn btn-1 rounded-pill mt-3"
-                        onclick="saveDeviceStatus()"
+                        onclick="submitForm()"
                       >
                         Save
                       </button>
                     </div>
-                  </div>
+                  </form>
                 </div>
               </div>
             </div>
@@ -223,57 +200,19 @@
       crossorigin="anonymous"
     ></script>
     <script>
-          var btnSwitch = document.getElementById("btn-switcher");
+      const notesForm = document.getElementById("notesForm");
 
-          function setInitialSwitcherPosition() {
-              const deviceStatus = <%= device.status %>; // Access the device.status value
-              if (deviceStatus === 1) {
-                  btnSwitch.style.left = "+50%";
-              } else {
-                  btnSwitch.style.left = "0";
-              }
-          }
+      function showNotesForm() {
+        notesForm.style.display = "block";
+      }
 
-          setInitialSwitcherPosition();
+      function hideNotesForm() {
+        notesForm.style.display = "none";
+      }
 
-          function clickToUnvalidate() {
-              btnSwitch.style.left = "0";
-          }
-
-          function clickToValidate() {
-              btnSwitch.style.left = "+50%";
-          }
-
-          function saveDeviceStatus() {
-              const deviceStatus = <%= device.status %>; // Get the initial device status
-              let newDeviceStatus = btnSwitch.style.left === "0px" ? 0 : 1; // Determine the new status based on switcher position
-
-              console.log("deviceStatus:", deviceStatus);
-      console.log("newDeviceStatus:", newDeviceStatus);
-
-              if (newDeviceStatus !== deviceStatus) {
-              // Only update if the status has changed
-
-              // Send AJAX request to update the device status
-              const xhr = new XMLHttpRequest();
-              xhr.open("POST", `/update-status/<%= device.sn %>`, true);
-              xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-              xhr.onreadystatechange = function () {
-                  if (xhr.readyState === XMLHttpRequest.DONE) {
-                      if (xhr.status === 200) {
-                          console.log("Device status updated successfully");
-                          window.location.href = `/detail/<%= device.sn %>`;
-                      } else {
-                          console.error("Failed to update device status");
-                      }
-                  }
-              };
-              xhr.send(JSON.stringify({ status: newDeviceStatus }));
-              } else {
-                //   window.location.href = `/detail/<%= device.sn %>`;
-                console.log(status)
-              }
-          }
+      function submitForm() {
+        notesForm.submit();
+      }
     </script>
   </body>
 </html>

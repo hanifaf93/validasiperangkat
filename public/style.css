@@ -1,12 +1,14 @@
 :root {
   --hijau-tua: #3c896d;
   --hijau-terang: #50ffb1;
+  --abu-abu: #6c757d;
 }
 
 * {
   font-family: "Poppins", sans-serif;
 }
 
+/* Navbar */
 .navbar {
   background-color: var(--hijau-tua);
 }
@@ -21,11 +23,22 @@
   border-bottom-right-radius: 15%;
 }
 
+.navbar-brand {
+  font-weight: 600;
+}
+/* End Navbar */
+
 body {
-  background: url(img/bg_home.png);
+  /* background: url(img/bg_home.png); */
+  /* background: var(--hijau-tua); */
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+a {
+  text-decoration: none;
+  color: #333;
 }
 
 @media (max-width: 767px) {
@@ -33,10 +46,6 @@ body {
     height: 50vh;
     padding-bottom: 0;
   }
-}
-
-.navbar-brand {
-  font-weight: 600;
 }
 
 .btn-1 {
@@ -111,8 +120,9 @@ body {
 
   font-size: 24px;
 
-  border-top-left-radius: 20px; /* Bulat di kiri atas */
-  border-top-right-radius: 20px; /* Bulat di kanan atas */
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  z-index: 999;
 }
 
 .navbar-link {
@@ -142,6 +152,10 @@ body {
 }
 
 /* Search Page */
+
+.search-results {
+  margin-bottom: 100px;
+}
 .search-result {
   border-bottom: 1px solid #ccc;
   padding: 10px 0;
@@ -149,4 +163,60 @@ body {
 
 .search-result p {
   margin: 2px 0;
+}
+
+/* Detail Page */
+.detail {
+  padding-bottom: 100px;
+}
+
+/* Detail Update */
+.button-box {
+  width: 100%;
+  margin: auto;
+  position: relative;
+  border-radius: 30px;
+  border: 2px solid var(--hijau-tua);
+  background: #fff;
+  text-align: center;
+}
+
+.toggle-btn-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.toggle-btn {
+  padding: 10px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  outline: none;
+  position: relative;
+  text-align: center;
+}
+
+.camera .container {
+  margin-bottom: 100px;
+}
+
+/* admin page */
+
+.admin-mt {
+  margin-top: 100px;
+}
+
+.sidebar-nav {
+  width: 270px;
+}
+
+@media (min-width: 992px) {
+  .sidebar-nav {
+    transform: none;
+    visibility: visible !important;
+  }
+
+  .admin-content {
+    margin-left: 300px;
+  }
 }

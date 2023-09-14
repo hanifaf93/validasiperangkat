@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aplikasi Validasi</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9"
+      crossorigin="anonymous"
+    />
+
+    <!-- Bootstrap Icon -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark align-items-start fixed-top"
+    >
+      <div class="container">
+        <!-- Offcanvas trigger -->
+        <button
+          class="btn"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#offcanvasScrolling"
+          aria-controls="offcanvasExample"
+        >
+          <span
+            class="navbar-toggler-icon"
+            data-bs-target="#offcanvasScrolling"
+          ></span>
+        </button>
+        <!-- Offcanvas trigger end -->
+        <a class="navbar-brand me-auto" href="/">Aplikasi Validasi</a>
+        <a class="btn btn-light" href="/logout">
+          <i class="bi bi-box-arrow-right"></i>
+          <span class="d-none d-sm-inline">Logout</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Offcanvas -->
+
+    <div
+      class="offcanvas offcanvas-start show position-fixed top-0 end-0"
+      data-bs-scroll="true"
+      data-bs-backdrop="false"
+      tabindex="-1"
+      id="offcanvasScrolling"
+      aria-labelledby="offcanvasScrollingLabel"
+      style="margin-top: 56px; width: 250px; z-index: 1050"
+    >
+      <div class="offcanvas-body">
+        <div class="container p-3">
+          <ul class="navbar-nav">
+            <li>
+              <a href="/dashboard" class="nav-link active">
+                <i class="bi bi-laptop me-3"></i>Devices</a
+              >
+            </li>
+            <li>
+              <a href="/dashboard/add" class="nav-link">
+                <i class="bi bi-plus-circle-fill me-3"></i>Add Device</a
+              >
+            </li>
+            <li>
+              <a href="/dashboard/settings" class="nav-link">
+                <i class="bi bi-gear me-3"></i>Settings
+              </a>
+            </li>
+            <li>
+              <a href="/register" class="nav-link">
+                <i class="bi bi-person-add me-3"></i>Add User
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- Offcanvas end -->
+
+    <!-- Add Device Form -->
+    <div class="admin-content admin-mt mb-5">
+      <!-- alert -->
+      <% if (successMessage) { %>
+      <div class="alert alert-success">Device berhasil ditambahkan.</div>
+      <% } %>
+      <div class="container">
+        <h2>Tambah Perangkat Baru</h2>
+        <form action="/add-device" method="POST">
+          <!-- Serial Number -->
+          <div class="mb-3">
+            <label for="serialNumber" class="form-label">Serial Number</label>
+            <input
+              type="number"
+              step="1"
+              class="form-control"
+              id="serialNumber"
+              name="serialNumber"
+              required
+            />
+          </div>
+
+          <!-- CSM -->
+          <div class="mb-3">
+            <label for="csm" class="form-label">CSM</label>
+            <input
+              type="number"
+              step="1"
+              class="form-control"
+              id="csm"
+              name="csm"
+              required
+            />
+          </div>
+
+          <!-- Perangkat -->
+          <div class="mb-3">
+            <label for="perangkat" class="form-label">Perangkat</label>
+            <input
+              type="text"
+              class="form-control"
+              id="perangkat"
+              name="perangkat"
+              required
+            />
+          </div>
+
+          <!-- Jenis -->
+          <div class="mb-3">
+            <label for="jenis" class="form-label">Jenis</label>
+            <input
+              type="text"
+              class="form-control"
+              id="jenis"
+              name="jenis"
+              required
+            />
+          </div>
+
+          <!-- Nama -->
+          <div class="mb-3">
+            <label for="nama" class="form-label">Nama</label>
+            <input
+              type="text"
+              class="form-control"
+              id="nama"
+              name="nama"
+              required
+            />
+          </div>
+
+          <!-- Regional -->
+          <div class="mb-3">
+            <label for="regional">Regional</label>
+            <select class="form-select" id="regional" name="regional" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+
+          <!-- Device Use -->
+          <div class="mb-3">
+            <label for="deviceUse" class="form-label">Device Use</label>
+            <input
+              type="text"
+              class="form-control"
+              id="deviceUse"
+              name="deviceUse"
+              required
+            />
+          </div>
+
+          <!-- NIK -->
+          <div class="mb-3">
+            <label for="nik" class="form-label">NIK</label>
+            <input
+              type="number"
+              step="1"
+              class="form-control"
+              id="nik"
+              name="nik"
+              required
+            />
+          </div>
+
+          <!-- Telepon -->
+          <div class="mb-3">
+            <label for="telepon" class="form-label">Telepon</label>
+            <div class="input-group">
+              <span class="input-group-text">+62</span>
+              <input
+                type="number"
+                step="1"
+                class="form-control"
+                id="telepon"
+                name="telepon"
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-1">Tambahkan</button>
+        </form>
+      </div>
+    </div>
+    <!-- Add Device Form -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+      crossorigin="anonymous"
+    ></script>
+    <script></script>
+  </body>
+</html>

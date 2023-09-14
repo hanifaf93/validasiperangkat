@@ -44,6 +44,7 @@
           <div class="row">
             <div class="col-lg-4">
               <div class="text-center">
+                <h2>Validasikan Perangkat</h2>
                 <img
                   src="/img/img_perangkat_aktif.svg"
                   class="card-img img-sm-fluid"
@@ -54,27 +55,52 @@
               </div>
             </div>
             <div class="col-lg-8">
-              <p class="d-flex justify-content-end mt-3" id="dateTime">
-                Tanggal, Tahun, Jam
-              </p>
-              <p class="d-flex justify-content-end text-right" id="location">
-                Lokasi Pengambilan Foto:
-              </p>
+              <p class="d-flex mt-3">Waktu: <span id="dateTime"></span></p>
+              <p class="d-flex" id="location">Lokasi Pengambilan Foto:</p>
               <div class="text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="imageInput"
-                  style="display: none"
-                  onchange="handleImageSelect(event)"
-                />
-                <button
-                  class="btn btn-1 btn-lg rounded-pill"
-                  onclick="openImagePicker()"
+                <form
+                  method="POST"
+                  action="/upload/<%= device.sn %>"
+                  enctype="multipart/form-data"
+                  id="validForm"
                 >
-                  <i class="bi bi-camera me-1"></i>
-                  Ambil Foto
-                </button>
+                  <input type="hidden" id="dateTimeInput" name="dateTime" />
+                  <input type="hidden" id="locationInput" name="location" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="imageInput"
+                    name="deviceImage"
+                    style="display: none"
+                    onchange="handleImageSelect(event)"
+                  />
+                  <textarea
+                    class="form-control rounded-3"
+                    rows="4"
+                    placeholder="Masukkan catatan di sini"
+                    name="notes"
+                  ></textarea>
+                  <div class="row">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-lg rounded-pill mt-3"
+                      onclick="openImagePicker()"
+                    >
+                      <i class="bi bi-camera me-1"></i>
+                      Ambil Foto
+                    </button>
+                    <div class="col"></div>
+                    <button
+                      id="saveBtn"
+                      type="button"
+                      class="btn btn-1 btn-lg rounded-pill mt-3"
+                      onclick="submitForm()"
+                      style="display: none"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -109,12 +135,30 @@
       crossorigin="anonymous"
     ></script>
     <script>
-      function handleImageSelect(event) {
+      const validForm = document.getElementById("validForm");
+
+      function openImagePicker() {
+        var imageInput = document.getElementById("imageInput");
+        imageInput.click();
+      }
+
+      async function handleImageSelect(event) {
         var selectedImage = event.target.files[0];
         if (selectedImage) {
           var deviceImage = document.getElementById("deviceImage");
           deviceImage.src = URL.createObjectURL(selectedImage);
+
+          const dateTime = updateDateTime();
+          const location = await updateLocation();
+
+          document.getElementById("dateTimeInput").value = dateTime;
+          document.getElementById("locationInput").value = location;
+          document.getElementById("saveBtn").style.display = "block";
         }
+      }
+
+      function submitForm() {
+        validForm.submit();
       }
 
       function updateDateTime() {
@@ -159,11 +203,7 @@
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
 
-                var apiKey = "pk.027ad4b99f880853f5e5cd8718398b13";
-
-                fetch(
-                  `https://us1.locationiq.com/v1/reverse?key=${apiKey}&lat=${latitude}&lon=${longitude}&format=json`
-                )
+                fetch(`/location?lat=${latitude}&lon=${longitude}`)
                   .then((response) => response.json())
                   .then((data) => {
                     var address = data.display_name;
@@ -193,11 +233,6 @@
       updateLocation();
 
       setInterval(updateDateTime, 1000);
-
-      function openImagePicker() {
-        var imageInput = document.getElementById("imageInput");
-        imageInput.click();
-      }
     </script>
   </body>
 </html>
