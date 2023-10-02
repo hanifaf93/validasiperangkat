@@ -21,11 +21,24 @@ dotenv.config({
 (async () => {
   const app = express();
 
-  const db = await mysql.createConnection({
+  // const db = await mysql.createConnection({
+  //   host: process.env.DATABASE_HOST,
+  //   user: process.env.DATABASE_USER,
+  //   password: process.env.DATABASE_PASSWORD,
+  //   database: process.env.DATABASE,
+  // });
+  const db = await mysql.createPool({
     host: process.env.DATABASE_HOST,
     user: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE,
+    waitForConnections: true,
+    connectionLimit: 10,
+    maxIdle: 10,
+    idleTimeout: 60000,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
   });
   console.log("MySQL Connected");
 
@@ -48,6 +61,10 @@ dotenv.config({
   );
 
   app.set("view engine", "ejs");
+
+  const cekAuto = require("./cekAuto");
+
+  cekAuto(db);
 
   // Routes
   app.get("/login", (req, res) => {
@@ -108,20 +125,32 @@ dotenv.config({
 
   app.get("/", async (req, res) => {
     try {
-      const query = "SELECT * FROM users WHERE id = ?";
-      const [results] = await db.query(query, [req.session.userId]);
+      if (req.user == null) return res.redirect("/login");
 
-      if (results[0] == null) return res.redirect("/login");
+      const user = req.user;
 
-      const user = results[0];
+      const allDeviceCountQuery =
+        user.regional > 0
+          ? `SELECT COUNT(*) as count FROM devices WHERE regional = ?`
+          : `SELECT COUNT(*) as count FROM devices`;
+      const validDeviceCountQuery =
+        user.regional > 0
+          ? `SELECT COUNT(*) as count FROM devices WHERE status = 1 AND regional = ?`
+          : `SELECT COUNT(*) as count FROM devices WHERE status = 1`;
+      const notValidDeviceCountQuery =
+        user.regional > 0
+          ? `SELECT COUNT(*) as count FROM devices WHERE status = 0 AND regional = ?`
+          : `SELECT COUNT(*) as count FROM devices WHERE status = 0`;
 
-      const allDeviceCountQuery = `SELECT COUNT(*) as count FROM devices`;
-      const validDeviceCountQuery = `SELECT COUNT(*) as count FROM devices WHERE status = 1`;
-      const notValidDeviceCountQuery = `SELECT COUNT(*) as count FROM devices WHERE status = 0`;
-
-      let [allDeviceCount] = await db.query(allDeviceCountQuery);
-      let [validDeviceCount] = await db.query(validDeviceCountQuery);
-      let [notValidDeviceCount] = await db.query(notValidDeviceCountQuery);
+      let [allDeviceCount] = await db.query(allDeviceCountQuery, [
+        user.regional,
+      ]);
+      let [validDeviceCount] = await db.query(validDeviceCountQuery, [
+        user.regional,
+      ]);
+      let [notValidDeviceCount] = await db.query(notValidDeviceCountQuery, [
+        user.regional,
+      ]);
 
       allDeviceCount = allDeviceCount[0].count;
       validDeviceCount = validDeviceCount[0].count;
@@ -143,18 +172,30 @@ dotenv.config({
       const status = req.query.status || "";
       const serialNumber = req.query.sn || "";
 
-      let query = `SELECT * FROM devices`;
+      const user = req.user;
+
+      let query = `SELECT * FROM devices WHERE`;
       const queryParams = [];
 
       if (status !== "") {
-        query += ` WHERE status = ?`;
+        query += ` status = ? AND`;
         queryParams.push(status);
       }
 
       if (serialNumber !== "") {
-        query += " WHERE sn LIKE ?";
+        query += " sn LIKE ? AND";
         queryParams.push(`%${serialNumber}%`);
       }
+
+      if (user.regional === 0) {
+        query = query.replace("WHERE", "");
+      }
+      if (user.regional > 0) {
+        query += " regional = ?";
+        queryParams.push(user.regional);
+      }
+
+      console.log(query);
 
       const [results] = await db.query(query, queryParams);
 
@@ -298,7 +339,7 @@ dotenv.config({
     console.log(imageHeight);
 
     const textWidth = 500; // Lebar latar belakang teks
-    const textHeight = 100; // Tinggi latar belakang teks
+    const textHeight = 500; // Tinggi latar belakang teks
     const backgroundColor = 0x000000ff; // Warna latar belakang (hitam)
 
     const backgroundWatermark = new Jimp(
@@ -308,11 +349,11 @@ dotenv.config({
     );
 
     // Tambahkan teks pada latar belakang
-    const font = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
     backgroundWatermark.print(
       font,
       10,
-      10,
+      100,
       {
         text:
           "Serial Number : " +
@@ -321,8 +362,8 @@ dotenv.config({
           formattedDatetime +
           ", Lokasi : " +
           deviceLocation,
-        alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT,
-        alignmentY: Jimp.VERTICAL_ALIGN_TOP,
+        alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
+        alignmentY: Jimp.VERTICAL_ALIGN_BOTTOM,
       },
       450,
       200
@@ -330,11 +371,11 @@ dotenv.config({
 
     // Gabungkan latar belakang teks dengan gambar asli
     const x = 0; // Posisi x untuk teks pada gambar asli
-    const y = imageHeight - textHeight; // Posisi y untuk teks pada gambar asli
+    const y = 0; // Posisi y untuk teks pada gambar asli
 
     imageResized.composite(backgroundWatermark, x, y, {
       mode: Jimp.BLEND_SOURCE_OVER, // Atur mode blending untuk transparansi
-      opacitySource: 0.5, // Ubah kecerahan teks agar tidak terlalu terang
+      opacitySource: 0.2, // Ubah kecerahan teks agar tidak terlalu terang
     });
 
     const base64Image = await imageResized.getBase64Async(Jimp.MIME_JPEG);
@@ -347,6 +388,30 @@ dotenv.config({
       const historyQuery =
         "INSERT INTO history (device_sn, time, location) VALUES (?, NOW(), ?)";
       await db.query(historyQuery, [sn, deviceLocation]);
+
+      // Ambil pengaturan admin untuk tanggal kadaluwarsa perangkat
+      const adminSettingsQuery =
+        "SELECT device_expiration_days FROM admin_settings";
+      const [adminSettingsResult] = await db.query(adminSettingsQuery);
+      const deviceExpirationDays =
+        adminSettingsResult[0].device_expiration_days;
+
+      // Ambil tanggal validasi terakhir perangkat
+      const getLastValidationQuery = "SELECT time FROM devices WHERE sn = ?";
+      const [lastValidationResult] = await db.query(getLastValidationQuery, [
+        sn,
+      ]);
+      const lastValidationDate = lastValidationResult[0].validation_date;
+
+      // Hitung tanggal kadaluwarsa berdasarkan pengaturan admin dan tanggal validasi terakhir
+      const currentDate = new Date();
+      const validationDate = new Date(currentDate);
+      validationDate.setDate(validationDate.getDate() + deviceExpirationDays);
+
+      // Perbarui tanggal kadaluwarsa dan status perangkat di database
+      const updateQuery =
+        "UPDATE devices SET time = ?, expiration_date = ?, status = ? WHERE sn = ?";
+      await db.query(updateQuery, [currentDate, validationDate, 1, sn]);
 
       res.status(200).redirect("/detail/" + sn);
     } catch (e) {
@@ -424,7 +489,12 @@ dotenv.config({
 
     try {
       const query = `UPDATE admin_settings SET device_expiration_days = ? WHERE id = 1`;
+
       await db.query(query, [deviceExpirationDays]);
+
+      const updateExpirationDayQuery = `UPDATE devices SET expiration_date = DATE_ADD(time, INTERVAL ? DAY) WHERE status = 1`;
+
+      await db.query(updateExpirationDayQuery, [deviceExpirationDays]);
 
       res.status(200).redirect("/dashboard/settings?success=1");
     } catch (e) {
